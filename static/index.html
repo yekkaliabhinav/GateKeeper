@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GateKeeper</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:sans-serif;background:#0f1117;color:#e2e8f0;transition:background .2s,color .2s}
+    body.light{background:#f5f5f5;color:#1a1a1a}
+
+    .navbar{background:#1e2130;border-bottom:1px solid #2d3148;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:10}
+    body.light .navbar{background:#fff;border-color:#e2e2e2}
+
+    .brand{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+    .brand-dot{width:8px;height:8px;border-radius:50%;background:#1D9E75}
+
+    .nav-links{display:flex;gap:4px}
+    .nav-btn{padding:6px 14px;border-radius:8px;font-size:13px;cursor:pointer;border:none;background:transparent;color:#94a3b8;transition:all .15s}
+    .nav-btn:hover{background:#2d3148;color:#e2e8f0}
+    body.light .nav-btn:hover{background:#f0f0f0;color:#1a1a1a}
+    .nav-btn.active{background:#2d3148;color:#e2e8f0;font-weight:500}
+    body.light .nav-btn.active{background:#e8e8e8;color:#1a1a1a}
+
+    .theme-btn{padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid #2d3148;background:transparent;color:#94a3b8}
+    body.light .theme-btn{border-color:#ddd;color:#555}
+
+    .content{padding:24px;max-width:960px;margin:0 auto}
+    .page{display:none}
+    .page.active{display:block}
+
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+    .card{background:#1e2130;border-radius:10px;padding:16px}
+    body.light .card{background:#fff;border:1px solid #e2e2e2}
+    .card-label{font-size:11px;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+    .card-value{font-size:30px;font-weight:600}
+    .card-value.green{color:#34d399}
+    .card-value.red{color:#f87171}
+    .card-value.purple{color:#a78bfa}
+
+    .panel{background:#1e2130;border:1px solid #2d3148;border-radius:12px;padding:20px;margin-bottom:16px}
+    body.light .panel{background:#fff;border-color:#e2e2e2}
+    .panel-title{font-size:14px;font-weight:500;margin-bottom:16px}
+
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+    input,select{background:#0f1117;border:1px solid #2d3148;border-radius:8px;color:#e2e8f0;padding:7px 12px;font-size:13px}
+    body.light input,body.light select{background:#f9f9f9;border-color:#ddd;color:#1a1a1a}
+    input{width:160px}
+    .btn{background:#4f46e5;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer}
+    .btn:hover{background:#4338ca}
+    .btn.green{background:#059669}
+    .btn.green:hover{background:#047857}
+
+    .log{max-height:200px;overflow-y:auto;font-size:12px;font-family:monospace}
+    .log-entry{padding:5px 8px;border-radius:4px;margin-bottom:4px;display:flex;justify-content:space-between}
+    .log-entry.ok{background:#052e16;color:#34d399}
+    .log-entry.err{background:#2d0b0b;color:#f87171}
+    body.light .log-entry.ok{background:#dcfce7;color:#166534}
+    body.light .log-entry.err{background:#fee2e2;color:#991b1b}
+
+    .bar-wrap{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .bar-label{width:180px;font-size:12px;color:#94a3b8;flex-shrink:0}
+    .bar-track{flex:1;background:#0f1117;border-radius:4px;height:8px}
+    body.light .bar-track{background:#f0f0f0}
+    .bar-fill{height:8px;border-radius:4px;transition:width .4s}
+    .bar-val{width:44px;font-size:12px;color:#94a3b8;text-align:right}
+
+    .cb-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .cb-card{background:#0f1117;border-radius:8px;padding:14px;display:flex;align-items:center;justify-content:space-between}
+    body.light .cb-card{background:#f9f9f9;border:1px solid #eee}
+    .cb-name{font-size:13px;font-family:monospace}
+    .cb-meta{font-size:11px;color:#94a3b8;margin-top:2px}
+    .state-pill{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+    .state-closed{background:#052e16;color:#34d399}
+    .state-open{background:#2d0b0b;color:#f87171}
+    .state-half_open{background:#2d1f00;color:#fbbf24}
+
+    .svc-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #2d3148;font-size:13px}
+    body.light .svc-row{border-color:#eee}
+    .svc-row:last-child{border-bottom:none}
+    .backend-badges{display:flex;gap:6px;flex-wrap:wrap}
+    .badge{font-size:11px;padding:2px 8px;border-radius:20px;background:#1e3a5f;color:#93c5fd;font-family:monospace}
+
+    .iframe-wrap{border-radius:8px;overflow:hidden;border:1px solid #2d3148}
+    body.light .iframe-wrap{border-color:#ddd}
+
+    .status-bar{font-size:12px;color:#94a3b8;margin-top:10px}
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="brand"><div class="brand-dot"></div>GateKeeper</div>
+  <div class="nav-links">
+    <button class="nav-btn active" onclick="show('dashboard',this)">Dashboard</button>
+    <button class="nav-btn" onclick="show('metrics',this)">Metrics</button>
+    <button class="nav-btn" onclick="show('circuit',this)">Circuit breaker</button>
+    <button class="nav-btn" onclick="show('services',this)">Services</button>
+    <button class="nav-btn" onclick="show('docs',this)">API docs</button>
+    <button class="nav-btn" onclick="show('admin',this)">Admin</button>
+  </div>
+  <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">Light mode</button>
+</div>
+
+<div class="content">
+
+  <!-- Dashboard -->
+  <div class="page active" id="page-dashboard">
+    <div class="cards">
+      <div class="card"><div class="card-label">Total requests</div><div class="card-value purple" id="total">0</div></div>
+      <div class="card"><div class="card-label">Allowed</div><div class="card-value green" id="allowed">0</div></div>
+      <div class="card"><div class="card-label">Denied</div><div class="card-value red" id="denied">0</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Send test request</div>
+      <div class="controls">
+        <input id="api-key" placeholder="x-api-key"/>
+        <input id="client-svc" placeholder="service (e.g. payments)" value="payments"/>
+        <select id="algo">
+          <option value="sliding_window">Sliding window</option>
+          <option value="fixed_window">Fixed window</option>
+          <option value="token_bucket">Token bucket</option>
+        </select>
+        <button class="btn" onclick="sendOne()">Send 1</button>
+        <button class="btn green" onclick="sendBurst()">Fire 15</button>
+      </div>
+      <div class="log" id="log"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Allow vs deny ratio</div>
+      <div class="bar-wrap">
+        <div class="bar-label">Allowed</div>
+        <div class="bar-track"><div class="bar-fill" id="bar-allowed" style="width:0%;background:#34d399"></div></div>
+        <div class="bar-val" id="pct-allowed">0%</div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-label">Denied</div>
+        <div class="bar-track"><div class="bar-fill" id="bar-denied" style="width:0%;background:#f87171"></div></div>
+        <div class="bar-val" id="pct-denied">0%</div>
+      </div>
+      <div class="status-bar" id="last-updated">Waiting for data...</div>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="page" id="page-metrics">
+    <div class="panel">
+      <div class="panel-title">Request counts by endpoint</div>
+      <div id="metrics-bars"><div style="color:#94a3b8;font-size:13px">Loading metrics...</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Raw Prometheus output</div>
+      <pre id="raw-metrics" style="font-size:11px;font-family:monospace;color:#94a3b8;max-height:300px;overflow-y:auto;white-space:pre-wrap">Loading...</pre>
+    </div>
+  </div>
+
+  <!-- Circuit Breaker -->
+  <div class="page" id="page-circuit">
+    <div class="panel">
+      <div class="panel-title">Backend circuit states</div>
+      <div class="cb-grid" id="cb-grid"><div style="color:#94a3b8;font-size:13px">Loading...</div></div>
+      <div class="status-bar" id="cb-updated">Auto-refreshes every 3s</div>
+    </div>
+  </div>
+
+  <!-- Services -->
+  <div class="page" id="page-services">
+    <div class="panel">
+      <div class="panel-title">Registered backend services</div>
+      <div id="svc-list"><div style="color:#94a3b8;font-size:13px">Loading...</div></div>
+    </div>
+  </div>
+
+    <!-- Admin -->
+  <div class="page" id="page-admin">
+
+    <div class="panel">
+      <div class="panel-title">Generate API key</div>
+      <div class="controls">
+        <input id="new-client-id" placeholder="client_id e.g. alice"/>
+        <select id="new-tier">
+          <option value="free">Free — 10 req/min</option>
+          <option value="pro">Pro — 100 req/min</option>
+          <option value="enterprise">Enterprise — 1000 req/min</option>
+        </select>
+        <button class="btn green" onclick="generateKey()">Generate key</button>
+      </div>
+      <div id="key-result" style="display:none;margin-top:12px">
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:6px">API key generated — copy it now, it won't be shown again</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <code id="generated-key" style="font-size:12px;background:#0f1117;padding:8px 12px;border-radius:8px;border:1px solid #2d3148;flex:1;word-break:break-all"></code>
+          <button class="btn" onclick="copyKey()">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Registered clients</div>
+      <div id="clients-list"><div style="color:#94a3b8;font-size:13px">Loading...</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Revoke API key</div>
+      <div class="controls">
+        <input id="revoke-key-input" placeholder="paste API key to revoke" style="width:340px"/>
+        <button class="btn" style="background:#dc2626" onclick="revokeKey()">Revoke</button>
+      </div>
+      <div id="revoke-result" style="font-size:13px;margin-top:10px"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Request logs</div>
+      <div class="controls">
+        <input id="log-client-filter" placeholder="filter by client_id (optional)"/>
+        <button class="btn" onclick="fetchLogs()">Load logs</button>
+      </div>
+      <div id="admin-logs" style="margin-top:12px"></div>
+    </div>
+
+  </div>
+
+  <!-- API Docs -->
+  <div class="page" id="page-docs">
+    <div class="iframe-wrap">
+      <iframe src="/docs" style="width:100%;height:700px;border:none;background:#fff"></iframe>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function show(page, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    btn.classList.add('active');
+    if (page === 'metrics') fetchMetrics();
+    if (page === 'circuit') fetchCircuit();
+    if (page === 'services') fetchServices();
+    if (page === 'admin') fetchClients();
+  }
+
+  function toggleTheme() {
+    const isLight = document.body.classList.toggle('light');
+    document.getElementById('theme-btn').textContent = isLight ? 'Dark mode' : 'Light mode';
+  }
+
+  async function sendOne() {
+    const key = document.getElementById('api-key').value;
+    const svc = document.getElementById('client-svc').value || 'payments';
+    if (!key) { alert('Enter your API key first'); return; }
+    const res = await fetch(`/gateway/${svc}/test`, {
+      method: 'POST',
+      headers: { 'x-api-key': key }
+    });
+    const data = await res.json();
+    addLog(data, res.status);
+    fetchStats();
+  }
+
+  async function sendBurst() {
+    for (let i = 0; i < 15; i++) {
+      await sendOne();
+      await new Promise(r => setTimeout(r, 80));
+    }
+  }
+
+  function addLog(data, status) {
+      const log = document.getElementById('log');
+      const entry = document.createElement('div');
+      const ok = data.allowed !== false && status < 400;
+      entry.className = 'log-entry ' + (ok ? 'ok' : 'err');
+      const traceId = data.trace_id ? `<span style="opacity:0.5;margin-left:8px">${data.trace_id}</span>` : '';
+      const left = `${ok ? '✓' : '✗'} ${data.client_id || '?'} · ${data.service || '?'}${traceId}`;
+      const right = ok
+        ? `remaining: ${data.remaining ?? '-'} · ${data.latency_ms ? data.latency_ms.toFixed(1)+'ms · ' : ''}${status}`
+        : `${data.error || 'denied'} · ${status}`;
+      entry.innerHTML = `<span>${left}</span><span>${right}</span>`;
+      log.prepend(entry);
+      if (log.children.length > 40) log.lastChild.remove();
+  }
+
+  async function fetchStats() {
+    const res = await fetch('/stats');
+    const data = await res.json();
+    document.getElementById('total').textContent = data.total.toLocaleString();
+    document.getElementById('allowed').textContent = data.allowed.toLocaleString();
+    document.getElementById('denied').textContent = data.denied.toLocaleString();
+    const total = data.total || 1;
+    const ap = Math.round(data.allowed / total * 100);
+    const dp = Math.round(data.denied / total * 100);
+    document.getElementById('bar-allowed').style.width = ap + '%';
+    document.getElementById('bar-denied').style.width = dp + '%';
+    document.getElementById('pct-allowed').textContent = ap + '%';
+    document.getElementById('pct-denied').textContent = dp + '%';
+    document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+  }
+
+  async function fetchMetrics() {
+    const res = await fetch('/metrics');
+    const text = await res.text();
+    document.getElementById('raw-metrics').textContent = text;
+    const lines = text.split('\n').filter(l => l.startsWith('http_requests_total{') && !l.startsWith('#'));
+    const container = document.getElementById('metrics-bars');
+    if (!lines.length) { container.innerHTML = '<div style="color:#94a3b8;font-size:13px">No data yet — send some requests first</div>'; return; }
+    const max = Math.max(...lines.map(l => parseFloat(l.split(' ').pop()) || 0));
+    container.innerHTML = lines.map(l => {
+      const handler = (l.match(/handler="([^"]+)"/) || [])[1] || '?';
+      const val = parseFloat(l.split(' ').pop()) || 0;
+      const pct = max ? Math.round(val / max * 100) : 0;
+      return `<div class="bar-wrap">
+        <div class="bar-label">${handler}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:#7F77DD"></div></div>
+        <div class="bar-val">${val}</div>
+      </div>`;
+    }).join('');
+  }
+
+  async function fetchCircuit() {
+    const res = await fetch('/circuit-breaker/status');
+    const data = await res.json();
+    const grid = document.getElementById('cb-grid');
+    const backends = data.backends;
+    if (!Object.keys(backends).length) {
+      grid.innerHTML = '<div style="color:#94a3b8;font-size:13px">No circuit data yet — send requests to backends first</div>';
+      return;
+    }
+    grid.innerHTML = Object.entries(backends).map(([url, info]) => `
+      <div class="cb-card">
+        <div>
+          <div class="cb-name">${url}</div>
+          <div class="cb-meta">failures: ${info.failures}</div>
+        </div>
+        <div class="state-pill state-${info.state}">${info.state.replace('_', '-')}</div>
+      </div>`).join('');
+    document.getElementById('cb-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+  }
+
+  async function fetchServices() {
+    const res = await fetch('/services');
+    const data = await res.json();
+    const list = document.getElementById('svc-list');
+    list.innerHTML = Object.entries(data.services).map(([name, urls]) => `
+      <div class="svc-row">
+        <span style="font-weight:500">${name}</span>
+        <div class="backend-badges">${urls.map(u => `<span class="badge">${u.replace('http://localhost:', ':')}</span>`).join('')}</div>
+      </div>`).join('');
+  }
+
+  setInterval(fetchStats, 2000);
+  setInterval(() => {
+    if (document.getElementById('page-circuit').classList.contains('active')) fetchCircuit();
+  }, 3000);
+  fetchStats();
+
+  async function generateKey() {
+    const clientId = document.getElementById('new-client-id').value.trim();
+    const tier = document.getElementById('new-tier').value;
+    if (!clientId) { alert('Enter a client ID'); return; }
+
+    const res = await fetch(`/keys/generate?client_id=${clientId}&tier=${tier}`, { method: 'POST' });
+    const data = await res.json();
+
+    document.getElementById('generated-key').textContent = data.api_key;
+    document.getElementById('key-result').style.display = 'block';
+    fetchClients();
+  }
+
+  function copyKey() {
+    const key = document.getElementById('generated-key').textContent;
+    navigator.clipboard.writeText(key);
+    const btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  }
+
+  async function fetchClients() {
+    const res = await fetch('/keys/list');
+    const data = await res.json();
+    const list = document.getElementById('clients-list');
+
+    if (!data.clients.length) {
+      list.innerHTML = '<div style="color:#94a3b8;font-size:13px">No clients registered yet</div>';
+      return;
+    }
+
+    list.innerHTML = `
+      <table style="width:100%;font-size:13px;border-collapse:collapse">
+        <thead>
+          <tr style="border-bottom:1px solid #2d3148">
+            <th style="text-align:left;padding:8px 0;color:#94a3b8;font-weight:400">Client ID</th>
+            <th style="text-align:left;padding:8px 0;color:#94a3b8;font-weight:400">Tier</th>
+            <th style="text-align:left;padding:8px 0;color:#94a3b8;font-weight:400">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.clients.map(c => `
+            <tr style="border-bottom:1px solid #1a1f35">
+              <td style="padding:10px 0;font-weight:500">${c.client_id}</td>
+              <td style="padding:10px 0">
+                <span style="font-size:11px;padding:2px 10px;border-radius:20px;background:${tierBg(c.tier)};color:${tierColor(c.tier)}">${c.tier}</span>
+              </td>
+              <td style="padding:10px 0">
+                <span style="font-size:11px;padding:2px 10px;border-radius:20px;background:${c.active==='true'?'#052e16':'#2d0b0b'};color:${c.active==='true'?'#34d399':'#f87171'}">
+                  ${c.active === 'true' ? 'active' : 'revoked'}
+                </span>
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  function tierBg(tier) {
+    return tier === 'enterprise' ? '#2d1f00' : tier === 'pro' ? '#1e3a5f' : '#1a1f35';
+  }
+  function tierColor(tier) {
+    return tier === 'enterprise' ? '#fbbf24' : tier === 'pro' ? '#93c5fd' : '#94a3b8';
+  }
+
+  async function revokeKey() {
+    const key = document.getElementById('revoke-key-input').value.trim();
+    if (!key) { alert('Paste an API key to revoke'); return; }
+
+    const res = await fetch(`/keys/revoke?api_key=${encodeURIComponent(key)}`, { method: 'POST' });
+    const data = await res.json();
+    const result = document.getElementById('revoke-result');
+
+    if (data.revoked) {
+      result.style.color = '#34d399';
+      result.textContent = 'Key revoked successfully';
+      fetchClients();
+    } else {
+      result.style.color = '#f87171';
+      result.textContent = 'Key not found or already revoked';
+    }
+    setTimeout(() => result.textContent = '', 3000);
+  }
+
+  async function fetchLogs() {
+    const clientFilter = document.getElementById('log-client-filter').value.trim();
+    const url = clientFilter ? `/logs/client/${clientFilter}` : '/logs?limit=20';
+    const res = await fetch(url);
+    const data = await res.json();
+    const logs = data.logs || [];
+    const container = document.getElementById('admin-logs');
+
+    if (!logs.length) {
+      container.innerHTML = '<div style="color:#94a3b8;font-size:13px">No logs found</div>';
+      return;
+    }
+
+    container.innerHTML = `
+      <table style="width:100%;font-size:12px;border-collapse:collapse;font-family:monospace">
+        <thead>
+          <tr style="border-bottom:1px solid #2d3148">
+            <th style="text-align:left;padding:6px 0;color:#94a3b8;font-weight:400">Trace ID</th>
+            <th style="text-align:left;padding:6px 0;color:#94a3b8;font-weight:400">Client</th>
+            <th style="text-align:left;padding:6px 0;color:#94a3b8;font-weight:400">Service</th>
+            <th style="text-align:left;padding:6px 0;color:#94a3b8;font-weight:400">Status</th>
+            <th style="text-align:left;padding:6px 0;color:#94a3b8;font-weight:400">Latency</th>
+            <th style="text-align:left;padding:6px 0;color:#94a3b8;font-weight:400">Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${logs.map(l => `
+            <tr style="border-bottom:1px solid #1a1f35">
+              <td style="padding:7px 0;color:#a78bfa">${l.trace_id}</td>
+              <td style="padding:7px 0">${l.client_id}</td>
+              <td style="padding:7px 0">${l.service}</td>
+              <td style="padding:7px 0">
+                <span style="color:${l.status_code < 400 ? '#34d399' : '#f87171'}">${l.status_code}</span>
+              </td>
+              <td style="padding:7px 0">${l.latency_ms}ms</td>
+              <td style="padding:7px 0;color:#94a3b8">${new Date(l.timestamp * 1000).toLocaleTimeString()}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }  
+</script>
+</body>
+</html>
